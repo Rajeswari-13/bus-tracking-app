@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Bus Tracking</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+    <script>
+        let map;
+        let markers = {};
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 13.63, lng: 79.42 }, // Tirupati center
+                zoom: 14,
+            });
+
+            fetchBusLocations();  // Fetch initial locations
+            setInterval(fetchBusLocations, 5000); // Auto-refresh every 5 seconds
+        }
+
+        function fetchBusLocations() {
+            fetch("/gps")
+                .then(response => response.json())
+                .then(data => {
+                    for (const [bus, coords] of Object.entries(data)) {
+                        const position = { lat: coords[0], lng: coords[1] };
+
+                        if (markers[bus]) {
+                            markers[bus].setPosition(position); // Update marker position
+                        } else {
+                            markers[bus] = new google.maps.Marker({
+                                position,
+                                map,
+                                title: bus,
+                            });
+                        }
+                    }
+                })
+                .catch(error => console.error("Error fetching data:", error));
+        }
+    </script>
+    <style>
+        #map {
+            height: 90vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body onload="initMap()">
+    <h2>Live Bus Tracking</h2>
+    <div id="map"></div>
+</body>
+</html>
